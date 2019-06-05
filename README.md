@@ -207,7 +207,7 @@ const App = () => {
 ```
 
 <small class="fragment">On place le code relatif aux effects dans un **callback**</small>
-<small class="fragment">Ce callback sera runné de manière **asynchrone**, une fois que react à updaté le DOM.</small>
+<small class="fragment">Ce callback sera runné de manière **asynchrone**, une fois que react a updaté le DOM.</small>
 
 
 ---
@@ -253,6 +253,11 @@ Note:
     fonction d'effet.
 
 ---
+<p class="white fragment">à vos claviers</p>
+
+<!-- .slide: data-background="https://media.giphy.com/media/11BbGyhVmk4iLS/giphy.gif" -->
+
+---
 
 <iframe src="https://codesandbox.io/embed/wonderful-hypatia-f3g60?fontsize=14&view=editor" title="exercice use effect" allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
 
@@ -279,7 +284,7 @@ Les custom hooks permettent d'**encapsuler** la complexité de notre code.
 
 <small class="">En résumé</small>
 
-<small class="fragment">**useEffect** est manière de rendre **déclaratif** du code effectful et impératif.</small>
+<small class="fragment">**useEffect** est une manière de rendre **déclaratif** du code effectful et impératif.</small>
 
 <small class="fragment">**Déclaratif** car le code est dépendant de la data.</small>
 
@@ -316,10 +321,11 @@ Il **faut** donc considérer les cas d'erreur dans le code.
 ```js
 const p = new Promise((resolve, reject) => {
   // make some effect
-  // if it succeed
-  resolve(someData)
-  // if it fails
-  reject(someError)
+  if (itSucceeds)
+    resolve(someData)
+
+  if (itFails)
+    reject(someError)
 })
 ```
 <small class="fragment">**2 branches** : une pour le succès et une pour l'erreur</small>
@@ -334,8 +340,8 @@ Pour ça, en javascript, on a quelque chose de pratique: **les promises**.
 
 ```js
 fetchUser() // returns a promise
-  .then(user => fetchFriends(user)) // chain a second promise
-  .then(friends => {}) // when all the side effect are done, run some code
+  .then(user => fetchFriends(user)) // chains a second promise
+  .then(friends => {}) // when all the side effects are done
 ```
 
 <small class="fragment">on peut *séquencer* plusieurs effets</small>
