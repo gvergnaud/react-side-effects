@@ -5,8 +5,8 @@ revealOptions:
     transition: 'slide'
 ---
 
-## React
-### Side Effects
+### React
+## Side Effects
 
 <p style="font-size:.7em">Slides: https://gvergnaud.github.io/react-side-effects</p>
 
@@ -127,41 +127,64 @@ Note:
 
 ---
 
-fonctions **pures** et **impures**
+## Les side effect en react
 
-<small class="fragment">Une fonction pure ne produit **pas de side effect**.</small>
-<br>
-<small class="fragment">Une fonction pure retourne le **même resultat** si on lui donne les **mêmes arguments**.</small>
-<br>
-<small class="fragment">Une fonction pure est une fonction au sens **mathématique** du terme.</small>
+---
+
+```js
+// in native: side effect
+const view = () => {
+  document.body.innerHTML = `
+    <div class="container">
+      <p>Hello world!</p>
+    </div>
+  `
+}
+```
+
+```jsx
+// in React: no side effect
+const View = () => {
+  return (
+    <div className="container">
+      <p>Hello world!</p>
+    </div>
+  )
+}
+```
+
+React rend les intéractions avec le DOM **pures** et **déclaratives**
 
 Note:
-
-  - Dans le monde de la programmation fonctionelle on appelle ça du code Impure
-    - Une fonction pure n'a pas de side effect et donne le même résultat si on lui donne le arguments.
-    - on dit qu'elle est *référentiellement transparente* (referencial transparency).
-
----
-
-
-Slide meme math pas cool
-
----
-
-
-
-# Les side effects
-
-
-## - Les side effect en réact
-
-  - Le principe de react est justement de ne pas avoir à faire de side effects pour modifier le DOM.
+- Le principe de react est justement de ne pas avoir à faire de side effects pour modifier le DOM.
     On ne mute plus directement les DOM nodes, mais à la place on donne une configuration qui
     représente ce à quoi le DOM doit resembler en fonction de ses props.
 
-  - React rend les intéractions avec le DOM **pures** et **déclaratives**.
+---
 
-  Cependant, lorsque l'on fait du web, on gère d'autres types de side effects que ceux du DOM.
+<small>Oui mais...</small>
+
+Le web ce n'est pas seulement intéragir avec le DOM
+
+---
+
+quelques side effects, du dévelopement frontend
+
+
+<small class="fragment">Les network requests (HTTP ou WebSocket la plupart du temps)</small>
+
+<small class="fragment">L'`url` et l'`History` pour le routing</small>
+
+<small class="fragment">Le `localStorage` ou les `cookies` pour la persistence</small>
+
+<small class="fragment">Les `event listener` globaux (scroll, drag & drop, etc)</small>
+
+<small class="fragment">les autres `threads` (service workers / web workers)</small>
+
+<small class="fragment">la `console` (seulement pour le débugging a priori)</small>
+
+Note: 
+Cependant, lorsque l'on fait du web, on gère d'autres types de side effects que ceux du DOM.
     - Des network requests (HTTP ou WebSocket la pluspart du temps)
     - le localStorage ou les cookies pour la persistence
     - L'url et l'History pour le routing
@@ -169,77 +192,127 @@ Slide meme math pas cool
     - parfois on a besoin d'ajouter des event listener à la main sur la window (scroll, drag & drop, etc)
     - la console (seulement pour le débugging a priori)
 
+---
 
-  Pour ça, un hook que vous connaissez: **useEffect**
+pour tout ça, on utilise **useEffect**
 
-### runner du code impure
-  - useEffect permet de runner du code impure lié à son component.
-```js
-useEffect(() => {
-  // ce code sera runné de manière asynchrone, une fois que react à updater le DOM.
-})
+---
+
+```jsx
+const App = () => {
+  useEffect(() => {
+    // effects
+  })
+}
 ```
 
+<small class="fragment">On place le code relatif aux effects dans un **callback**</small>
+<small class="fragment">Ce callback sera runné de manière **asynchrone**, une fois que react à updaté le DOM.</small>
+
+
+---
+
+```js
+const App = () => {
+  useEffect(() => {
+    // i can use 'user' and 'isAdmin'
+  }, [user, isAdmin])
+}
+```
+
+<small class="fragment">Les dépendances sont données en **deuxième paramètre**</small>
+<small class="fragment">À chaque fois que l'une de ses dépendances va **changer**, le callback sera **re-exécuté**</small>
+<small class="fragment">Le tableau de dépendances est **optionelle**</small>
+<small class="fragment">si il n'est pas fourni, le callback sera exécuté après chaque render</small>
+
+
+Note: 
 ### dependances explicites
   - useEffect est une API très intéressante car elle permet de penser ses side effects comme une **conséquence** d'un changement de data. Les dépendances sont explicite, et le code est runné à chaque
     fois qu'une de ses dépendance change.
 
+---
+
 ```js
-useEffect(() => {
-  // here I'll be using my dependencies to execute some effectful code.
-}, [my, dependencies])
+const App = () => {
+  useEffect(() => {
+    window.addEventListener('scroll', handler)
+    return () => window.removeEventListener('scroll', handler)
+  }, [handler])
+}
 ```
 
+<small class="fragment">À l'intérieur du useEffect, je peux retourner une **fonction de cleanup**</small>
+<small class="fragment">Elle sera exécutée si notre composant est **retiré du DOM**</small>
+<small class="fragment">ou si les dépendances ne sont **plus à jour**</small>
+
+Note:
 ### cleanup callback
   - Pour certains effets, on a besoin de pouvoir les annuler lors que leur dépendances ont changé,
     comme le event listeners par exemple. Pour ça on peut retourner un callback de cleanup dans notre
     fonction d'effet.
 
-```js
-useEffect(() => {
-  el.addEventListener(eventName, handler)
-  return () => el.removeEventListener(eventName, handler)
-}, [el, eventName, handler])
-```
+---
 
-### custom hooks
-Notre code effectful est souvent le code le plus complexe que l'on a à gérer dans notre codebase.
-Les hooks de react sont très pratiques car ils nous permettent d'**abstraire** cette complexité dans des hooks
-customs.
+<iframe src="https://codesandbox.io/embed/wonderful-hypatia-f3g60?fontsize=14&view=editor" title="exercice use effect" allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
 
-```js
-const useMouse = () => {
-  const [mouse, setMouse] = useState([0, 0])
+---
 
-  useEffect(() => {
-    const handler = (e) => setMouse([e.clientX, e.clientY])
-    window.addEventListener('mousemove', handler)
-    return () => window.removeEventListener('mousemove', handler)
-  }, [])
+### Créer un custom hook
 
-  return mouse
-}
 
-function MyComponent () {
-  const [x, y] = useMouse() // le side effect est abstrait (contenu, encapsulé dans a fonction)
-  return <div style={{ transform: `translate(${x}px, ${y}px)` }} />
-}
-```
+---
+
+Il est possible de **composer** plusieurs hooks ensemble<br> 
+pour créer un **nouveau** hook.
+
+
+---
+
+<iframe src="https://codesandbox.io/embed/exercice-use-effect-wz4pz?fontsize=14&view=editor" title="exercice custom hook" allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+
+---
+
+Les custom hooks permettent d'**encapsuler** la complexité de notre code.
+
+---
+
+<small class="">En résumé</small>
+
+<small class="fragment">**useEffect** est manière de rendre **déclaratif** du code effectful et impératif.</small>
+
+<small class="fragment">**Déclaratif** car le code est dépendant de la data.</small>
+
+Note:
 en résumé, useEffect est manière d'abstraire du code impératif pour le rendre **déclaratif**, c'est à dire dépendant de la data.
 
+---
 
-## La gestion des erreurs
+### La gestion des erreurs
+
+---
+
+Les side effects sont par nature **imprevisibles**.
+
+<small class="fragment">une request HTTP **peut échouer**</small>
+<small class="fragment">un acces au cookie **peut échouer** (environement sandboxé, iframes...)</small>
+<small class="fragment">une manipulation de DOM **peut échouer** (plusieurs modifications incompatibles)</small>
+
+Note:
 Les side effects sont par nature imprevisibles.
   - une request HTTP peut échouer
   - un acces au cookie peut échouer (dans un environnement sandboxé comme une iframe)
   - une manipulation de dom peut échouer (en cas de modification incompatible par une autre partie de notre codebase ou par l'utilisateur lui même, ses extensions etc)
 
-Il faut donc considérer les cas d'erreur dans le code.
+---
 
+Il **faut** donc considérer les cas d'erreur dans le code.
 
-Pour ça, en javascript, on a quelque chose de pratique: **les promises**.
+---
 
-- permet de gérer le cas d'erreur
+#### Les promises
+
+---
 ```js
 const p = new Promise((resolve, reject) => {
   // make some effect
@@ -249,16 +322,40 @@ const p = new Promise((resolve, reject) => {
   reject(someError)
 })
 ```
+<small class="fragment">**2 branches** : une pour le succès et une pour l'erreur</small>
 
-- permet de composer et de sequencer plusieurs side effects différents
+Note:
+Pour ça, en javascript, on a quelque chose de pratique: **les promises**.
+
+- permet de gérer le cas d'erreur
+
+---
+
+
 ```js
 fetchUser() // returns a promise
   .then(user => fetchFriends(user)) // chain a second promise
   .then(friends => {}) // when all the side effect are done, run some code
 ```
 
-Donc, pourquoi ne pas créer un *hook* pour utiliser des promises dans nos components ?
+<small class="fragment">on peut *séquencer* plusieurs effets</small>
 
+Note:
+- permet de composer et de sequencer plusieurs side effects différents
+
+---
+
+
+<small>
+Donc, pourquoi ne pas créer un *hook* pour utiliser des promises dans nos components ?
+</small>
+
+
+---
+
+<iframe src="https://codesandbox.io/embed/cocky-breeze-0dxfk?fontsize=14&view=editor" title="exercice use promise" allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+
+Note:
 
 TUTO construire un promise based useSideEffect hook
 
@@ -290,13 +387,46 @@ const usePromise = (getPromise, deps) => {
       isCancelled = true
     }
   }, deps)
+
+  return [type, data, error]
 }
 ```
 
-## Side effect et state reducer pattern
 
-Ou exécuter des side effect dans le contexte d'un state reducer ?
+---
 
+### Side effect et state reducer pattern
+
+---
+
+On a un problème. 
+
+<small class="fragment">puisque notre reducer est une fonction **pure**, elle ne doit pas avoir de side effect.</small>
+
+Note:
+pottentiel gif: problème
+
+---
+
+Son type est trop restrictif
+
+`(state, action) => state`
+
+---
+
+Mais pourquoi pas le changer ?
+
+`(state, action) => [state, callback]`
+
+---
+
+<iframe src="https://codesandbox.io/embed/interesting-yonath-bfou0?fontsize=14&view=editor" title="exercice use effect reducer " allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+
+---
+
+C'est l'approche de plusieurs langages fonctionelles comme **Elm** ou **Reason**
+
+Note:
 deux approches :
 1. Changer la signature de notre réducer:
 
@@ -307,6 +437,33 @@ on passe à `(state, action) => [state, effectCallback]`
 Quand le side effect est synchrone, on peut avoir envie de l'avoir executé avant de re-render.
 
 // CODE Sandbox ?
+
+---
+
+Deuxième solution : 
+
+Utiliser des **middlewares**
+
+---
+
+C'est l'approche de **Redux**
+
+La plus courante en javascript
+
+---
+
+<iframe src="https://codesandbox.io/embed/quirky-bird-ux76p?fontsize=14&view=editor" title="exercice : effect middleware" allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+
+Note:
+
+Commencer par expliquer ce qu'est un middleware
+- faire un logger middleware
+- simple thunk middleware
+- effect middleware avec promises
+
+Ou exécuter des side effect dans le contexte d'un state reducer ?
+
+
 
 2. utiliser un middleware
 
@@ -366,6 +523,15 @@ C'est l'approche prise par plusieurs projets open sources, dont Hyper, le termin
 
 TUTO construire ce middleware
 
+---
+
+Quel sont les bénéfices de cette approche ? 
+
+
+<small class="fragment">Nos effets deviennent **inspectables** car ils sont représentés par des actions</small>
+<small class="fragment">On peut implémenter des **optimistic updates** automatiques</small>
+
+Note:
 ### Quels sont les bénéfices ?
 
 #### optimistic updates for free
@@ -421,16 +587,12 @@ effectMiddleware(apiMock)
 
 ```
 
-
+---
 
 ### Merci
 
 de votre attention
 
-
----
-
-### Ressources
 
 ---
 
@@ -477,6 +639,14 @@ c pas sorcier
 
   .lower.lower.lower {
     text-transform: none;
+  }
+
+  .reveal {
+    font-size: 35px;
+  }
+
+  .reveal small {
+    font-size: .7em;
   }
 
   .reveal pre {
