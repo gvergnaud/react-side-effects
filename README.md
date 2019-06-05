@@ -420,10 +420,6 @@ Mais pourquoi pas le changer ?
 
 ---
 
-<iframe src="https://codesandbox.io/embed/interesting-yonath-bfou0?fontsize=14&view=editor" title="exercice use effect reducer " allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
-
----
-
 C'est l'approche de plusieurs langages fonctionelles comme **Elm** ou **Reason**
 
 Note:
@@ -437,6 +433,11 @@ on passe à `(state, action) => [state, effectCallback]`
 Quand le side effect est synchrone, on peut avoir envie de l'avoir executé avant de re-render.
 
 // CODE Sandbox ?
+
+---
+
+<iframe src="https://codesandbox.io/embed/interesting-yonath-bfou0?fontsize=14&view=editor" title="exercice use effect reducer " allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+
 
 ---
 

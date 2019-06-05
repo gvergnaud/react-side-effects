@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-    <title>React — State Reducer Pattern</title>
+    <title>React Side Effects</title>
     <link rel="stylesheet" href="./css/reveal.css" />
     <link rel="stylesheet" href="./css/theme/solarized.css" id="theme" />
     <link rel="stylesheet" href="./css/highlight/atom-one-dark.css" />
@@ -13,10 +13,12 @@
   </head>
   <body>
     <div class="reveal">
-      <div class="slides"><section  data-markdown><script type="text/template">## React
-### State reducer pattern
+      <div class="slides"><section  data-markdown><script type="text/template">
 
-<p style="font-size:.7em">Slides: https://gvergnaud.github.io/react-state-reducer</p>
+### React
+## Side Effects
+
+<p style="font-size:.7em">Slides: https://gvergnaud.github.io/react-side-effects</p>
 
 </script></section><section  data-markdown><script type="text/template">
 ## 👋
@@ -53,597 +55,463 @@ Héticien de la P2017
 </ul>
 </li>
 </ul>
-</aside></script></section><section  data-markdown><script type="text/template">
-
-## 👀
-<p class="fragment">Qui êtes vous ?</p>
-
-
-<aside class="notes"><ul>
-<li>Qui etes vous ?<ul>
-<li>Techno utilisée ? </li>
-<li>quels projets ?</li>
-<li>plutot agence / produits ?</li>
-</ul>
-</li>
-</ul>
-</aside></script></section><section  data-markdown><script type="text/template">
-## 🗺
-<div style="display:flex; flex-direction: column; align-items: flex-start; width: 600px; margin: 0 auto;">
-  <div class="flex">
-    <h3 style="margin:0; margin-right:10px;">I.</h3>
-    récapitulatif sur react
-  </div>
-
-  <div class="flex">
-    <h3 style="margin:0; margin-right:10px;">II.</h3>
-    state reducer pattern
-  </div>
-
-  <div class="flex">
-    <h3 style="margin:0; margin-right:10px;">III.</h3>
-    <span>exercice : cloner Notion&nbsp;</span><img class="simple-image" src="resources/logo-notion.png" style="width: 70px" />
-  </div>
-</div>
+</aside></script></section><section  data-markdown><script type="text/template">## 🗺
+#### I. qu'est ce que les side effects
+#### II. les effects en React
+#### III. gérer les erreurs
+#### IV. les side effects et le state reducer pattern
 </script></section><section  data-markdown><script type="text/template">
 # I
-Petit récapitulatif sur **React** ...
+### les side effects ?
+<small>mais qu'est-ce donc</small>
 </script></section><section  data-markdown><script type="text/template">
-<h2 class="white">Un arbre</h2>
-<h6 class="white lower">(de composants)</h6>
-
-<!-- .slide: data-background="resources/tree.jpeg" -->
+Le code qui intéragit avec le **monde extérieur**
 </script></section><section  data-markdown><script type="text/template">
-![react tree update](resources/react-tree-update.png)
+<small>Mais extérieur à quoi ?</small>
+<br/>
+<p class="fragment">Au **scope** de la fonction</p>
+</script></section><section  data-markdown><script type="text/template">
+```js
+let imInTheUpperScope = true
 
-<p class="fragment">Chaque composant peut contenir un **state**</p>
+function sideEffectFunction(params) {
+  // tout ce qui est défini ici
+  // fait partie du scope de la function `sideEffectFunction`
 
-<aside class="notes"><ul>
-<li><p>Recap sur react</p>
+  const imPartOfTheFunctionScope = true
+
+  // si je modifie quelque chose
+  // du scope parent, alors je fais un side effect:
+
+  imInTheUpperScope = false // /!\ Side effect!
+
+  // Modifier les paramètres est également un side effect
+  params.hello = '👋'
+}
+
+// l'ordre des définitions n'a pas d'importance
+let imAlsoInTheUpperScope = true
+```
+
+`{}`
+
+<small>Le scope de la function est determiné par ce qui est défini à l'intérieur de ses brackets</small>
+
+</script></section><section  data-markdown><script type="text/template">
+<small>Quelques **exemples** de **side effects** :</small>
+
+<small class="fragment">**Modifier des variables** du scope extérieur</small>
+<br>
+<small class="fragment">Les requètes **HTTP**</small>
+<br>
+<small class="fragment">L'accès à une **base de donnée**</small>
+<br>
+<small class="fragment">Cookies, **localStorage**</small>
+<br>
+<small class="fragment">**Web APIs** (DOM, WebAudio, WebGL...)</small>
+<br>
+<small class="fragment">**File system**</small>
+
+
+
+<aside class="notes"><h2 id="-qu-est-ce-que-les-side-effects-">- Qu&#39;est ce que les side effects ?</h2>
 <ul>
-<li><p>une application react est un arbre de composants</p>
-<pre><code>  Component
-   /      \
- /          \
-</code></pre><p>Component     Component
-  /                \
-/                    \
-Component              Component</p>
-</li>
+<li>Tout ce qui touche au monde extérieur<ul>
+<li>HTTP</li>
+<li>accès à une base de donnée</li>
+<li>Cookies, localStorage</li>
+<li>web APIs</li>
+<li>File System</li>
 </ul>
 </li>
 </ul>
 </aside></script></section><section  data-markdown><script type="text/template">
-### le state
-<p class="fragment">la **data** qui défini l'interface</p>
-<p class="fragment">Quand le state **update**, l'interface **update**</p>
-
-<aside class="notes"><ul>
-<li>Chaque component contiens un state<ul>
-<li>Le state est de la data qu&#39;il peut muter au cours du temps</li>
-<li>L&#39;UI est défini par le state (view = f(state))</li>
-</ul>
-</li>
-</ul>
-</aside></script></section><section  data-markdown><script type="text/template"><div class="flex">
-  <img class="simple-image" src="resources/todo-state.png" style="width:40vw" />
-  <img src="resources/todo-app.png" style="width:40vw" />
-</div>
+## Les side effect en react
 </script></section><section  data-markdown><script type="text/template">
-`view = f(state)`
-
-plus besoin d'update la view.
-
-Il suffit d'update le state
-</script></section><section  data-markdown><script type="text/template">
-### Data flow
-
-<p class="fragment">En react le data flow est **unidirectionnel**</p>
-
-<p class="fragment">composant **parent** → composants **enfants**</p>
-
-<p class="fragment">data **down**, events **up**</p>
-
-<aside class="notes"><ul>
-<li>Contrairement a d&#39;autres framework ou les enfant peuvent directement updater leurs parents,
-en react le data flow est <strong>unidirectionnel</strong>. Il se dirige toujours du parent vers les enfants<ul>
-<li>a chaque fois qu&#39;un component update son state, tous les components enfants sont re-render
-pour updater le DOM</li>
-<li>Les props d&#39;un component enfant est (presque) toujours le state d&#39;un component parent.</li>
-</ul>
-</li>
-</ul>
-</aside></script></section><section  data-markdown><script type="text/template">
-<p class="white fragment">Cool.</p>
-<!-- .slide: data-background="https://media.giphy.com/media/GCvktC0KFy9l6/giphy.gif" -->
-</script></section><section  data-markdown><script type="text/template">
-Vous connaissez **useState()**
+```js
+// in native: side effect
+const view = () => {
+  document.body.innerHTML = `
+    <div class="container">
+      <p>Hello world!</p>
+    </div>
+  `
+}
+```
 
 ```jsx
-function Counter() {
-  const [count, setCount] = React.useState(0)
-
+// in React: no side effect
+const View = () => {
   return (
-    <div>
-      <p>{count}</p>
-      <button onClick={() => setCount(x => x + 1)}>+</button>
+    <div className="container">
+      <p>Hello world!</p>
     </div>
   )
 }
 ```
-<p class="fragment">C'est pratique</p>
+
+React rend les intéractions avec le DOM **pures** et **déclaratives**
 
 <aside class="notes"><ul>
-<li>Vous avez appris <code>useState()</code> qui permet de déclarer un state updatable</li>
+<li>Le principe de react est justement de ne pas avoir à faire de side effects pour modifier le DOM.
+  On ne mute plus directement les DOM nodes, mais à la place on donne une configuration qui
+  représente ce à quoi le DOM doit resembler en fonction de ses props.</li>
 </ul>
 </aside></script></section><section  data-markdown><script type="text/template">
-Mais ça a des limitations
+<small>Oui mais...</small>
+
+Le web ce n'est pas seulement intéragir avec le DOM
 </script></section><section  data-markdown><script type="text/template">
+quelques side effects, du dévelopement frontend
 
-```js
-const [isOpen, setIsOpen] = React.useState(false)
-const [search, setSearch] = React.useState('')
-const [sortBy, setSortBy] = React.useState('createdAt')
-const [category, setCategory] = React.useState('all')
-const [date, setDate] = React.useState('31')
-// ...
 
-const reset = () => {
-  setIsOpen(false)
-  setSearch('')
-  setSortBy('createdAt')
-  setCategory('all')
-  setDate('31')
+<small class="fragment">Les network requests (HTTP ou WebSocket la plupart du temps)</small>
+
+<small class="fragment">L'`url` et l'`History` pour le routing</small>
+
+<small class="fragment">Le `localStorage` ou les `cookies` pour la persistence</small>
+
+<small class="fragment">Les `event listener` globaux (scroll, drag & drop, etc)</small>
+
+<small class="fragment">les autres `threads` (service workers / web workers)</small>
+
+<small class="fragment">la `console` (seulement pour le débugging a priori)</small>
+
+<aside class="notes"><p>Cependant, lorsque l&#39;on fait du web, on gère d&#39;autres types de side effects que ceux du DOM.</p>
+<pre><code>- Des network requests (HTTP ou WebSocket la pluspart du temps)
+- le localStorage ou les cookies pour la persistence
+- L&#39;url et l&#39;History pour le routing
+- les autres threads (service workers / web workers)
+- parfois on a besoin d&#39;ajouter des event listener à la main sur la window (scroll, drag &amp; drop, etc)
+- la console (seulement pour le débugging a priori)
+</code></pre></aside></script></section><section  data-markdown><script type="text/template">
+pour tout ça, on utilise **useEffect**
+</script></section><section  data-markdown><script type="text/template">
+```jsx
+const App = () => {
+  useEffect(() => {
+    // effects
+  })
 }
 ```
-<p class="fragment">ça ne **scale** pas</p>
+
+<small class="fragment">On place le code relatif aux effects dans un **callback**</small>
+<small class="fragment">Ce callback sera runné de manière **asynchrone**, une fois que react à updaté le DOM.</small>
+
 </script></section><section  data-markdown><script type="text/template">
-**le code se complexifie**
+```js
+const App = () => {
+  useEffect(() => {
+    // i can use 'user' and 'isAdmin'
+  }, [user, isAdmin])
+}
+```
 
-<small>les modifications de state peuvent provenir de n'importe où.</small>
+<small class="fragment">Les dépendances sont données en **deuxième paramètre**</small>
+<small class="fragment">À chaque fois que l'une de ses dépendances va **changer**, le callback sera **re-exécuté**</small>
+<small class="fragment">Le tableau de dépendances est **optionelle**</small>
+<small class="fragment">si il n'est pas fourni, le callback sera exécuté après chaque render</small>
 
 
-**difficile à debugger**
-
-<small>aucun moyen simple d'inspecter le code et ses updates au cours du temps.</small>
-
-
-<aside class="notes"><p>C&#39;est cool, ça marche bien, mais, lorsque le component se complexifie, ça a des limitations</p>
+<aside class="notes"><h3 id="dependances-explicites">dependances explicites</h3>
 <ul>
-<li>quand on a beaucoup de state</li>
-<li>Dans une grande application on veut pouvoir refacto facilement, travailler à plusieur facilement et ajouter des fonctionnalité à notre projet sans complexifier le projet. cette version naive du state management est pratique pour les petit truc stateful isolé (genre un menu qui peut être ouvert ou fermé), mais est limité quand on veut construire quelque chose de complexe (comme notion!)</li>
+<li>useEffect est une API très intéressante car elle permet de penser ses side effects comme une <strong>conséquence</strong> d&#39;un changement de data. Les dépendances sont explicite, et le code est runné à chaque
+fois qu&#39;une de ses dépendance change.</li>
+</ul>
+</aside></script></section><section  data-markdown><script type="text/template">
+```js
+const App = () => {
+  useEffect(() => {
+    window.addEventListener('scroll', handler)
+    return () => window.removeEventListener('scroll', handler)
+  }, [handler])
+}
+```
+
+<small class="fragment">À l'intérieur du useEffect, je peux retourner une **fonction de cleanup**</small>
+<small class="fragment">Elle sera exécutée si notre composant est **retiré du DOM**</small>
+<small class="fragment">ou si les dépendances ne sont **plus à jour**</small>
+
+<aside class="notes"><h3 id="cleanup-callback">cleanup callback</h3>
+<ul>
+<li>Pour certains effets, on a besoin de pouvoir les annuler lors que leur dépendances ont changé,
+comme le event listeners par exemple. Pour ça on peut retourner un callback de cleanup dans notre
+fonction d&#39;effet.</li>
+</ul>
+</aside></script></section><section  data-markdown><script type="text/template">
+<iframe src="https://codesandbox.io/embed/wonderful-hypatia-f3g60?fontsize=14&view=editor" title="exercice use effect" allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+</script></section><section  data-markdown><script type="text/template">
+### Créer un custom hook
+
+</script></section><section  data-markdown><script type="text/template">
+Il est possible de **composer** plusieurs hooks ensemble<br> 
+pour créer un **nouveau** hook.
+
+</script></section><section  data-markdown><script type="text/template">
+<iframe src="https://codesandbox.io/embed/exercice-use-effect-wz4pz?fontsize=14&view=editor" title="exercice custom hook" allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+</script></section><section  data-markdown><script type="text/template">
+Les custom hooks permettent d'**encapsuler** la complexité de notre code.
+</script></section><section  data-markdown><script type="text/template">
+<small class="">En résumé</small>
+
+<small class="fragment">**useEffect** est manière de rendre **déclaratif** du code effectful et impératif.</small>
+
+<small class="fragment">**Déclaratif** car le code est dépendant de la data.</small>
+
+<aside class="notes"><p>en résumé, useEffect est manière d&#39;abstraire du code impératif pour le rendre <strong>déclaratif</strong>, c&#39;est à dire dépendant de la data.</p>
+</aside></script></section><section  data-markdown><script type="text/template">
+### La gestion des erreurs
+</script></section><section  data-markdown><script type="text/template">
+Les side effects sont par nature **imprevisibles**.
+
+<small class="fragment">une request HTTP **peut échouer**</small>
+<small class="fragment">un acces au cookie **peut échouer** (environement sandboxé, iframes...)</small>
+<small class="fragment">une manipulation de DOM **peut échouer** (plusieurs modifications incompatibles)</small>
+
+<aside class="notes"><p>Les side effects sont par nature imprevisibles.</p>
+<ul>
+<li>une request HTTP peut échouer</li>
+<li>un acces au cookie peut échouer (dans un environnement sandboxé comme une iframe)</li>
+<li>une manipulation de dom peut échouer (en cas de modification incompatible par une autre partie de notre codebase ou par l&#39;utilisateur lui même, ses extensions etc)</li>
+</ul>
+</aside></script></section><section  data-markdown><script type="text/template">
+Il **faut** donc considérer les cas d'erreur dans le code.
+</script></section><section  data-markdown><script type="text/template">
+#### Les promises
+</script></section><section  data-markdown><script type="text/template">```js
+const p = new Promise((resolve, reject) => {
+  // make some effect
+  // if it succeed
+  resolve(someData)
+  // if it fails
+  reject(someError)
+})
+```
+<small class="fragment">**2 branches** : une pour le succès et une pour l'erreur</small>
+
+<aside class="notes"><p>Pour ça, en javascript, on a quelque chose de pratique: <strong>les promises</strong>.</p>
+<ul>
+<li>permet de gérer le cas d&#39;erreur</li>
 </ul>
 </aside></script></section><section  data-markdown><script type="text/template">
 
-# II
-State reducer pattern
-</script></section><section  data-markdown><script type="text/template">
-Un nouveau hook
-
 ```js
-const [state, dispatch] = useReducer(reducer, initialState)
+fetchUser() // returns a promise
+  .then(user => fetchFriends(user)) // chain a second promise
+  .then(friends => {}) // when all the side effect are done, run some code
 ```
-</script></section><section  data-markdown><script type="text/template">
-<p class="white">Mais qu'est ce qu'un reducer ?</p>
 
-<!-- .slide: data-background="https://media.giphy.com/media/7K3p2z8Hh9QOI/giphy.gif" -->
-
-</script></section><section  data-markdown><script type="text/template">
-Un reducer est une function **pure**
-
-de type `(A, B) => A`
-
-Avec `A` et `B` des types variables.
+<small class="fragment">on peut *séquencer* plusieurs effets</small>
 
 <aside class="notes"><ul>
-<li>II. State reducer pattern<ul>
-<li>concept abstrait:<ul>
-<li>(a, b) =&gt; a</li>
-<li>(state, action) =&gt; state</li>
-</ul>
-</li>
-</ul>
-</li>
+<li>permet de composer et de sequencer plusieurs side effects différents</li>
 </ul>
 </aside></script></section><section  data-markdown><script type="text/template">
 
-<p class="white fragment">C'est abstrait.</p>
-
-<!-- .slide: data-background="https://media.giphy.com/media/pPhyAv5t9V8djyRFJH/giphy.gif" -->
-
-
-</script></section><section  data-markdown><script type="text/template">
-Vous vous souvenez de `Array.reduce` ?
-
-
-
-```js
-const reducer = (sum, phrase) => sum + phrase.length
-
-[
-  'Hello',
-  'Bonjour',
-  'Hallo',
-  'Buenos dias'
-].reduce(reducer, 0)
-```
-
-<div class="fragment">
-<p>ici le type **concret** est</p>
-
-<p>`(number, string) => number`</p>
-</div>
+<small>
+Donc, pourquoi ne pas créer un *hook* pour utiliser des promises dans nos components ?
+</small>
 
 </script></section><section  data-markdown><script type="text/template">
-Dans le cas de notre application, le type concret sera
+<iframe src="https://codesandbox.io/embed/cocky-breeze-0dxfk?fontsize=14&view=editor" title="exercice use promise" allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+
+<aside class="notes"><p>TUTO construire un promise based useSideEffect hook</p>
+<pre><code class="lang-js">const usePromise = (getPromise, deps) =&gt; {
+  const [type, setType] = useState(&#39;pending&#39;)
+  const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
+  useEffect(() =&gt; {
+    let isCancelled = false
+    setType(&#39;pending&#39;)
+    setData(null)
+    setError(null)
+
+    getPromise()
+      .then(data =&gt; {
+        if (isCancelled) return
+        setData(data)
+        setType(&#39;resolved&#39;)
+      })
+      .catch(err =&gt; {
+        if (isCancelled) return
+        setError(err)
+        setType(&#39;rejected&#39;)
+      })
+
+    return () =&gt; {
+      isCancelled = true
+    }
+  }, deps)
+
+  return [type, data, error]
+}
+</code></pre>
+</aside></script></section><section  data-markdown><script type="text/template">
+### Side effect et state reducer pattern
+</script></section><section  data-markdown><script type="text/template">
+On a un problème. 
+
+<small class="fragment">puisque notre reducer est une fonction **pure**, elle ne doit pas avoir de side effect.</small>
+
+<aside class="notes"><p>pottentiel gif: problème</p>
+</aside></script></section><section  data-markdown><script type="text/template">
+Son type est trop restrictif
 
 `(state, action) => state`
-
 </script></section><section  data-markdown><script type="text/template">
-Une action ?
+Mais pourquoi pas le changer ?
 
-```js
-const addOne = { type: 'ADD', value: 1 } // notre action
-
-const reducer = (state, action) => {
-  if (action.type === 'ADD') return state + action.value
-  return state
-}
-
-reducer(10, addOne)
-// => 11
-```
-<p class="fragment">juste de la **data**!</p>
-
+`(state, action) => [state, callback]`
 </script></section><section  data-markdown><script type="text/template">
-**Les types**
+C'est l'approche de plusieurs langages fonctionelles comme **Elm** ou **Reason**
 
-<small>Des strings uniques qui permettent de communiquer l'intention de l'utilisateur au reducer.</small>
-
-```js
-const INCREMENT = 'INCREMENT'
-const DECREMENT = 'DECREMENT'
-```
-
-<aside class="notes"><ul>
-<li>Le type des actions<ul>
-<li>souvent des string</li>
-<li>permet au reducer de savoir de quel action il s&#39;agit</li>
-</ul>
-</li>
-</ul>
+<aside class="notes"><p>deux approches :</p>
+<ol>
+<li>Changer la signature de notre réducer:</li>
+</ol>
+<p>au lieu de <code>(state, action) =&gt; state</code>
+on passe à <code>(state, action) =&gt; [state, effectCallback]</code></p>
+<p>^ l&#39;approche de ELM et de Reason. ça pose quand même un problème: quand est ce que l&#39;on run les side effects ?
+Quand le side effect est synchrone, on peut avoir envie de l&#39;avoir executé avant de re-render.</p>
+<p>// CODE Sandbox ?</p>
 </aside></script></section><section  data-markdown><script type="text/template">
-<small>Les **actions** sont</small>
-
-<p class="fragment">**Serialisable**</p>
-
-<p class="fragment"><small>On peut envoyer une action via **HTTP** ou **WebSocket**</small></p>
-
-<p class="fragment">**Transformable**</p>
-
-<p class="fragment"><small>On peut **modifier** les actions à la volée avant de les envoyer au reducer</small></p>
-
-<p class="fragment">**Inspectable**</p>
-
-<p class="fragment"><small>On peut **logger** et **sauvegarder** le flux d'actions pour remonter dans le temps</small></p>
-
-<aside class="notes"><ul>
-<li>la forme des actions<ul>
-<li>leur caractéristique principale: c&#39;est de la data! ca permet de:<ul>
-<li>serialiser les actions pour les envoyés sur un reseau (websocket, http, echange entre plusieurs process, electron...)</li>
-<li>debugger facilement (DEMO redux devtools sur sketchfab)<ul>
-<li>inspecter les changement</li>
-<li>undo et redo des changement</li>
-<li>time travel debugging</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>les transformer à la volé grace à des <strong>middlewares</strong><ul>
-<li>action
--&gt; |middleware| -&gt; action modifiée
--&gt; |middleware| -&gt; action remodifiée
--&gt; |reducer| -&gt; state</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</aside></script></section><section  data-markdown><script type="text/template">
-<small>(Parenthèse)</small>
-
-<small>en **TypeScript** on peut représenter nos actions comme un **type union**, ce qui permet de s'assurer que son code est **valide**</small>
-
-<small>(pas d'action oubliée, pas d'erreur dans le nom d'un type)</small>
-
-```ts
-type Action =
-  | { type: 'INCREMENT', value: number }
-  | { type: 'DECREMENT', value: number }
-```
-
-<aside class="notes"><p>faites pas trop attention à la syntaxe, si on a le temps et si ça vous interesse je vous ferais un petit cours de typescript en fin de semaine.</p>
-<p>C&#39;est de plus en plus utilisé, il y a 50% de la communité JS qui a switché sur TS en 2 ans.</p>
-<p>Un truc a connaitre</p>
-</aside></script></section><section  data-markdown><script type="text/template">
-
-### Structurer son state en modules
-</script></section><section  data-markdown><script type="text/template">
-```js
-// myStateModule.js
-
-export const types = {/* ... */}
-
-export const actions = {/* ... */}
-
-export const selectors = {/* ... */}
-
-export const initialState = {/* ... */}
-
-export const reducer = (state, action) => {/* ... */}
-```
-<small>un module exporte des **types**, des **actions**, des **selectors**, un **initialState** et un **reducer**.</small>
+<iframe src="https://codesandbox.io/embed/interesting-yonath-bfou0?fontsize=14&view=editor" title="exercice use effect reducer " allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
 
 </script></section><section  data-markdown><script type="text/template">
-```js
+Deuxième solution : 
 
-export const types = {
-  INCREMENT: 'INCREMENT',
-  DECREMENT: 'DECREMENT',
-}
-
-```
+Utiliser des **middlewares**
 </script></section><section  data-markdown><script type="text/template">
-```js
+C'est l'approche de **Redux**
 
-export const actions = {
-  increment: value => ({ type: types.INCREMENT, value }),
-  decrement: value => ({ type: types.DECREMENT, value }),
-}
-
-```
+La plus courante en javascript
 </script></section><section  data-markdown><script type="text/template">
-```js
-export const selectors = {
-  count: (state) => state.count
-}
-```
+<iframe src="https://codesandbox.io/embed/quirky-bird-ux76p?fontsize=14&view=editor" title="exercice : effect middleware" allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
 
-le state doit être **minimal**. 
-
-<small>Tout ce qui peut être **dérivé** du state doit être défini avec des selectors.</small>
-
-<aside class="notes"><ul>
-<li>les selectors<ul>
-<li>l&#39;idée c&#39;est d&#39;avoir le plus petit state possible. </li>
-<li>Des que quelque chose dans notre state peut être dérivé d&#39;autre chose, alors il n&#39;a plus sa place dans le state.</li>
-<li>les selectors sont des functions qui permettent de dériver une valeur du state.</li>
-<li>un peu comme les computed properties en vue.</li>
+<aside class="notes"><p>Commencer par expliquer ce qu&#39;est un middleware</p>
+<ul>
+<li>faire un logger middleware</li>
+<li>simple thunk middleware</li>
+<li>effect middleware avec promises</li>
 </ul>
-</li>
-</ul>
-</aside></script></section><section  data-markdown><script type="text/template">
-```js
-
-export const initialState = {
-  count: 0
-}
-
-```
-</script></section><section  data-markdown><script type="text/template">
-```js
-export const reducer = (state, action) => {
-  switch (action.type) {
-    case types.INCREMENT:
-      return { ...state, count: state.count + 1 }
-
-    case types.DECREMENT:
-      return { ...state, count: state.count - 1 }
+<p>Ou exécuter des side effect dans le contexte d&#39;un state reducer ?</p>
+<ol>
+<li>utiliser un middleware</li>
+</ol>
+<p>le middleware prend une fonction qui retourne une promesse et la transform en actions:</p>
+<pre><code class="lang-js">
+const someEffectAction = {
+  type: &#39;SOME_EFFECT_ACTION&#39;,
+  async effect() {
+    // do stuff
   }
 }
-```
-</script></section><section  data-markdown><script type="text/template"><h3 class="white">DEMO</h3>
 
-<!-- .slide: data-background="https://media.giphy.com/media/3o7aCTfyhYawdOXcFW/giphy.gif" -->
-</script></section><section  data-markdown><script type="text/template">
-
-Un state facile à faire **évoluer**
-
-<small class="fragment">Toutes les modifications de state sont **au même endroit**.</small>
-<small class="fragment">Que des fonctions pures implique un comportement **consistent** et **prévisible**.</small>
-<small class="fragment">Le state **read-only**, accessible par des selecteurs, permet **refacto** sans casser l'API public.</small>
-<small class="fragment">On peut ajouter des fonctionnalités sans augmenter la **complexité** du code.</small>
-
-<aside class="notes"><ul>
-<li>structurer son state grace au <code>state reducer pattern</code> permet de:<ul>
-<li>Avoir une application dont le comportement est prévisible et consistant. </li>
-<li>avoir toutes les modifications de state <strong>au même endroit</strong>.</li>
-<li>ne pas pouvoir setter le state de manière arbitraire</li>
-<li>lire le state seulement par des accesseurs</li>
-<li>découpler l&#39;UI de la gestion du state<ul>
-<li>Toutes ces caractéristiques rendent le code plus facile à faire évoluer, ajouter des features, refacto, etc tout en gardant une complexité basse.</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</aside></script></section><section  data-markdown><script type="text/template"><small>(Parenthèse)</small>
-
-Qu'est ce que la **complexité** du code ?
-
-</script></section><section  data-markdown><script type="text/template">
-En géométrie
-
-<img class=simple-image src=resources/circle.png />
-<img class=simple-image src=resources/triangle.png />
-
-<p class=fragment>deux formes simples</p>
-</script></section><section  data-markdown><script type="text/template">
-
-
-<img src=resources/logo-apple-forme-complexe.jpg  style="height:60vh" />
+dispatch(someEffectAction)
+</code></pre>
+<p>Le middleware intercepte l&#39;action et va remplacer la function <code>effect</code> par de la data:</p>
+<pre><code class="lang-js">{
+  type: &#39;SOME_EFFECT_ACTION&#39;,
+  effect: {
+    type: &#39;pending&#39;,
+    error: null,
+    data: null
+  }
+}
+</code></pre>
+<p>puis</p>
+<pre><code class="lang-js">{
+  type: &#39;SOME_EFFECT_ACTION&#39;,
+  effect: {
+    type: &#39;resolved&#39;,
+    error: null,
+    data: {...} // data returned by the promise
+  }
+}
+</code></pre>
+<p>ou</p>
+<pre><code class="lang-js">{
+  type: &#39;SOME_EFFECT_ACTION&#39;,
+  effect: {
+    type: &#39;rejected&#39;,
+    error: Error{...},  // error thrown by the promise
+    data: null
+  }
+}
+</code></pre>
+<p>C&#39;est l&#39;approche prise par plusieurs projets open sources, dont Hyper, le terminal de zeit.co</p>
+<p>TUTO construire ce middleware</p>
+</aside></script></section><section  data-markdown><script type="text/template">
+Quel sont les bénéfices de cette approche ? 
 
 
-<p class=fragment>Une forme complexe</p>
+<small class="fragment">Nos effets deviennent **inspectables** car ils sont représentés par des actions</small>
+<small class="fragment">On peut implémenter des **optimistic updates** automatiques</small>
 
-</script></section><section  data-markdown><script type="text/template">
-Comment évaluer si un bout de code est <br/>
-complexe ou non ?
-</script></section><section  data-markdown><script type="text/template">
-Comme en géométrie, une fonction est **complexe** si elle **fait plusieurs** choses **différentes**.
-</script></section><section  data-markdown><script type="text/template">
-Pour garder un code maintenable il faut **décomposer** les fonctions complexes en petites fonctions simples.
-</script></section><section  data-markdown><script type="text/template">
-<img src=https://media.giphy.com/media/rHYkDUYtFD8ty/giphy.gif style="height:50vh" />
-
-<small class="fragment">(fin de la parenthèse)</small>
-</script></section><section  data-markdown><script type="text/template">
-### State libraries
-
-<img class=simple-image src=resources/logo-redux.png style="height: 25vh" />
-</script></section><section  data-markdown><script type="text/template">
-<small class=white>Redux permet de construire un **arbre de reducers**</small>
-
-<img class=simple-image src=resources/reducer-tree-white.png style="height: 50vh" />
-
-<small class=white>Grâce à **combineReducers()**</small>
-
-
-<!-- .slide: data-background="resources/tree3-dark.jpg" -->
-</script></section><section  data-markdown><script type="text/template">
-autre libs de state-management
-
-- mobx
-- vuex
-- ...
-
-<aside class="notes"><ul>
-<li><p>vous avez peut être entendu parlé de redux ?</p>
+<aside class="notes"><h3 id="quels-sont-les-b-n-fices-">Quels sont les bénéfices ?</h3>
+<h4 id="optimistic-updates-for-free">optimistic updates for free</h4>
+<p>Puisque l&#39;on peut clairement identifier les actions qui représentent des effets,
+on peut créer une logique d&#39;error handling commune.</p>
+<p>L&#39;optimistic update est le fait de faire <em>comme si</em> l&#39;effect avait déjà eu lieu avant que la requete ai fini
+pour donner l&#39;impression à l&#39;utilisateur que notre application est super rapide.</p>
+<p>cependant, si l&#39;action fail, il faut <strong>rollback</strong> les changements sur le state pour bien indiquer qu&#39;il y a eu une erreur!</p>
+<p>Puisque l&#39;on sait différentier une action &#39;pending&#39; d&#39;une action &#39;rejected&#39;, on peut automatiser ce processus pour toutes nos actions.
+il suffit de :</p>
 <ul>
-<li><p>une lib de state management qui permet de <strong>composer</strong> plusieurs reducers les uns avec les autres pour avoir un <strong>arbre de reducers</strong></p>
-<pre><code>  Reducer
-  /      \
-/          \
-</code></pre><p>  Reducer     Reducer
-  /                \
-/                    \
-Reducer                 Reducer</p>
-</li>
-<li><p>ou mobx</p>
-</li>
-<li>ou vuex
-je les connais pas, mais ces plus ou moins la même chose.</li>
+<li>stocker le diff du state au pending</li>
+<li>en cas d&#39;erreur, réappliquer le state précédent</li>
+<li>en cas de succès, on peut enlever le diff que l&#39;on avait stocké.</li>
 </ul>
-</li>
-</ul>
+<h2 id="tester-les-side-effects">Tester les side effects</h2>
+<p>Les side effects sont la partie compliqué à tester. Comment simplifier le testing de notre app ?</p>
+<p>les mocks &amp; dependency injection</p>
+<p>On peut encore améliorer notre middleware:</p>
+<p>Au lieux d&#39;importer la logique de nos side effect directement dans notre code, on peut se créer
+des <strong>services</strong> qui vont se charcher de faire les side effect pour nous, et les injecter via notre middleware.</p>
+<p>Comme ça, si on est dans un contexte de testes automatisé, dans lequel on a pas envie de vraiment faire des requests,
+on peut injecter un mock de notre service.</p>
+<pre><code class="lang-js">// inside our code
+
+const apiService = {
+  getUser(id) {
+    return fetch(`/users/${id}`).then(res =&gt; res.json())
+  }
+}
+
+effectMiddleware(apiService)
+
+// Inside an automated test
+const apiMock = {
+  getUser(id) {
+    return new Promise(resolve =&gt; {
+      resolve({ name: &#39;Gabriel&#39;, id })
+    })
+  }
+}
+
+effectMiddleware(apiMock)
+</code></pre>
 </aside></script></section><section  data-markdown><script type="text/template">
-### 👑
-Ressources pour devenir un **roi** du **state**
-</script></section><section  data-markdown><script type="text/template">
-<p class=white>Make impossible state impossible</p>
-https://www.youtube.com/watch?v=IcgmSRJHu_8
-
-<!-- .slide: data-background="resources/make-impossible-state-impossible.jpg" -->
-
-<aside class="notes"><ul>
-<li>(Parenthese) Slide sur Make impossible state impossible<ul>
-<li>Les datastructures utilisées dans le state doivent être en accord avec ce qu&#39;elle représente.<ul>
-<li>si vous avez pas le droit d&#39;avoir deux fois le même élément dans une liste, utiliser un Set plutot qu&#39;un Array</li>
-<li>Si deux boolean sont mutuellement exclusifs, utiliser soit un boolean, soit un union de string</li>
-<li>Si vous avez de la data qui correspond à un element, stockez par ID</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</aside></script></section><section  data-markdown><script type="text/template">
-<div class=flex>
-  <img class="simple-image" src="resources/itsy-bitsy.png" style="height:50vh" />
-  <div style="flex:1">
-  <p><small>Know your **data structures**!</small></p>
-
-  <p><small>**List** vs **Set** vs **Map** vs **Queue** vs **Stack** vs **Trees** vs **Graphs** vs **Binary Trees** ...</small></p>
-
-  <p>https://github.com/jamiebuilds/itsy-bitsy-data-structures</p>
-  </div>
-</div>
-
-</script></section><section  data-markdown><script type="text/template">
-### En résumé
-</script></section><section  data-markdown><script type="text/template">
-Un state reducer est une **fonction**
-
-<small>qui prend le **state précédent** et qui retourne le **state suivant**</small>
-</script></section><section  data-markdown><script type="text/template">
-<small>Pour savoir comment modifier le state</small>
-<br>
-le reducer a besoin d'**une action**
-</script></section><section  data-markdown><script type="text/template">
-Une action n'est que de la **donnée**
-
-<small>Un objet qui **décrit** les changements à apporter au state</small>
-</script></section><section  data-markdown><script type="text/template">
-
-<small>un module de state contient</small>
-<br>
-<p class=fragment>un **reducer**</p>
-<p class=fragment>des **actions**</p>
-<p class=fragment>des **selectors**</p>
-<p class=fragment>des **types**</p>
-
-
-
-</script></section><section  data-markdown><script type="text/template">
-<small>Ce pattern pert</small>
-<p class=fragment>de réduire la **complexité** du code</p>
-<p class=fragment>et d'**optimiser** le code pour le **changement**</p>
-
-</script></section><section  data-markdown><script type="text/template">
-Dan abramov — Optimized for change
-
-https://overreacted.io/optimized-for-change/
-</script></section><section  data-markdown><script type="text/template">
-<small>Un code optimisé pour le changement est un code</small>
-<br>
-Sans relations **implicites** entre ses parties
-
-
-<aside class="notes"><ul>
-<li>ce pattern permet de réduire la complexité du code, et d&#39;<strong>optimiser le code pour le changement</strong><ul>
-<li>(Parenthese) La pire erreur qu&#39;on peut faire en temps que developer c&#39;est de croire que l&#39;on sait comment le produit va évoluer. Les business requirement peuvent changer, votre produit peut pivoter... On ne peut pas deviner ce qu&#39;il faudra changer dans le future. Il faut mettre cette incertitude au coeur de nos choix de design, et garder la plus grande flexibilité possible dans notre codebase.</li>
-<li><a href="https://overreacted.io/optimized-for-change/">Dan abramov — Optimized for change</a></li>
-<li>Un code optimisé pour le changement === un code avec aucune relation implicite</li>
-<li>distinction relation explicite vs relation implicite</li>
-</ul>
-</li>
-</ul>
-</aside></script></section><section  data-markdown><script type="text/template">
-
 ### Merci
 
 de votre attention
 
 </script></section><section  data-markdown><script type="text/template">
-### Ressources
-
-- [Make impossible state impossible, par Richard Feldman](https://www.youtube.com/watch?v=IcgmSRJHu_8)
-- [Itsy Bitsy Data Structures, par @jamibuilds](https://github.com/jamiebuilds/itsy-bitsy-data-structures)
-- [Dan abramov — Optimized for change](https://overreacted.io/optimized-for-change/)</script></section><section  data-markdown><script type="text/template">
 **Gabriel Vergnaud**
 
 - [Github](https://github.com/gvergnaud)
 - [Twitter](https://twitter.com/GabrielVergnaud)
 - [LinkedIn](https://www.linkedin.com/in/gabriel-vergnaud-09446199)
 
-<aside class="notes"><!-- 
-good gifs 
+<aside class="notes"><!--
+good gifs
 shipit: https://giphy.com/gifs/fail-code-boat-143vPc6b08locw
 keyboard:
  - https://giphy.com/gifs/vodafone-de-done-keyboard-l378gxtNQaXcsqY7K
  - https://giphy.com/gifs/working-typing-cartoon-11BbGyhVmk4iLS
  - https://giphy.com/gifs/tmnt-teenage-mutant-ninja-turtles-cFdHXXm5GhJsc
  - https://media.giphy.com/media/3o7aCTfyhYawdOXcFW/giphy.gif
-c pas sorcier 
+c pas sorcier
 - https://gfycat.com/fr/grandwearyflea
 - https://giphy.com/gifs/cannabis-jamy-gourmaud-I9LxqeAcsBRNS
 - https://www.google.com/imgres?imgurl=https%3A%2F%2Fresize-europe1.lanmedia.fr%2Fr%2F622%2C311%2Cforcex%2Ccenter-middle%2Fimg%2Fvar%2Feurope1%2Fstorage%2Fimages%2Feurope1%2Fmedias-tele%2Ffred-et-jamy-devoilent-le-nouveau-cest-pas-sorcier-1353712%2F21066760-1-fre-FR%2FFred-et-Jamy-devoilent-le-nouveau-C-est-pas-sorcier.jpg&imgrefurl=https%3A%2F%2Fwww.europe1.fr%2Fmedias-tele%2Ffred-et-jamy-devoilent-le-nouveau-cest-pas-sorcier-1353712&docid=XLVABVUvKIBgHM&tbnid=F-V_Lzs40s6APM%3A&vet=10ahUKEwjD4OWLl8biAhVC8uAKHcBuA0kQMwhRKAEwAQ..i&w=622&h=311&safe=off&bih=766&biw=1440&q=image%20jamie%20fred%20et%20jamy&ved=0ahUKEwjD4OWLl8biAhVC8uAKHcBuA0kQMwhRKAEwAQ&iact=mrc&uact=8 -->
@@ -670,6 +538,14 @@ c pas sorcier
 
   .lower.lower.lower {
     text-transform: none;
+  }
+
+  .reveal {
+    font-size: 35px;
+  }
+
+  .reveal small {
+    font-size: .7em;
   }
 
   .reveal pre {
