@@ -164,7 +164,7 @@ Note:
 
 <small>Oui mais...</small>
 
-Le web ce n'est pas seulement intéragir avec le DOM
+Le web, ce n'est pas **seulement** intéragir avec le DOM
 
 ---
 
