@@ -2,7 +2,7 @@
   "name": "introduction-au-functional-programming",
   "version": "0.1.0",
   "devDependencies": {
-    "reveal-md": "^3.0.4"
+    "reveal-md": "^5.4.0"
   },
   "scripts": {
     "dist": "rm -rf ./docs && reveal-md README.md --theme solarized --highlight-theme atom-one-dark --static docs --static-dirs=resources",
